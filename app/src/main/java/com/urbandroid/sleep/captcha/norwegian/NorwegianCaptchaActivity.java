@@ -11,11 +11,22 @@ import android.widget.TextView;
 import com.urbandroid.sleep.captcha.CaptchaSupport;
 import com.urbandroid.sleep.captcha.CaptchaSupportFactory;
 import com.urbandroid.sleep.captcha.RemainingTimeListener;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.Arrays;
 
 // this is the main captcha activity
 public class NorwegianCaptchaActivity extends Activity {
+
+    private final int NORWEGIAN = 1;
+    private final int ENGLISH = 2;
 
     private CaptchaSupport captchaSupport; // include this in every captcha
 
@@ -39,14 +50,23 @@ public class NorwegianCaptchaActivity extends Activity {
 
         // show difficulty in TextView with id "difficulty", read from captchaSupport.getDifficulty()
         final TextView difficultyView = (TextView) findViewById(R.id.difficulty);
-        //difficultyView.setText(getResources().getString(R.string.difficulty, captchaSupport.getDifficulty()));
-        difficultyView.setText(getResources().getString(R.string.difficulty));
+        difficultyView.setText(getResources().getString(R.string.difficulty, captchaSupport.getDifficulty()));
 
-        // show a random string of length = (difficulty * 3) in TextView with id "captcha_text"
+        // read word list
+        String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar + "1000.csv";
+        File csvfile = new File(csvfileString);
+        List<String []> dictionary = new ArrayList<>();
+        try (CSVReader reader = new CSVReader(
+                new InputStreamReader(
+                        getResources().openRawResource(R.raw.common_words)))) {
+            dictionary = reader.readAll();
+        } catch (Exception e) {
+            System.err.println("COULD NOT READ CSV DICT");
+        }
         final TextView captchaTextView = (TextView) findViewById(R.id.captcha_text);
-        final String captchaText = randomString(captchaSupport.getDifficulty() * 3);
-        captchaTextView.setText(captchaText);
-
+        final String question = dictionary.get(0)[NORWEGIAN];
+        final String answer = dictionary.get(0)[ENGLISH];
+        captchaTextView.setText(question);
 
         final EditText input_text = (EditText) findViewById(R.id.input_text);
 
@@ -54,10 +74,9 @@ public class NorwegianCaptchaActivity extends Activity {
         findViewById(R.id.done_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i("ReverseCaptchaText", captchaText);
+                Log.i("ReverseCaptchaText", question);
                 Log.i("ReverseCaptchaInput", input_text.getText().toString());
-                if (input_text.getText().toString().equals(new StringBuilder(captchaText).reverse().toString())) {
-                    captchaTextView.setText("wasd");
+                if (input_text.getText().toString().equals(answer)) {
                     captchaSupport.solved(); // .solved() broadcasts an intent back to Sleep as Android to let it know that captcha is solved
                     finish();
                 }
@@ -74,11 +93,11 @@ public class NorwegianCaptchaActivity extends Activity {
 
     }
 
-    public static String randomString(int length) {
+    private static String randomString(int length) {
         char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         Random generator = new Random();
         StringBuilder sb = new StringBuilder();
-        for(int i = 0; i < length; i++ ) {
+        for (int i = 0; i < length; i++) {
             char c = chars[generator.nextInt(chars.length)];
             sb.append(c);
         }
