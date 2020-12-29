@@ -12,21 +12,20 @@ import com.urbandroid.sleep.captcha.CaptchaSupport;
 import com.urbandroid.sleep.captcha.CaptchaSupportFactory;
 import com.urbandroid.sleep.captcha.RemainingTimeListener;
 import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import static java.lang.Integer.parseInt;
 
 // this is the main captcha activity
 public class NorwegianCaptchaActivity extends Activity {
-
-    private final int NORWEGIAN = 1;
-    private final int ENGLISH = 2;
 
     private CaptchaSupport captchaSupport; // include this in every captcha
 
@@ -55,17 +54,24 @@ public class NorwegianCaptchaActivity extends Activity {
         // read word list
         String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar + "1000.csv";
         File csvfile = new File(csvfileString);
-        List<String []> dictionary = new ArrayList<>();
-        try (CSVReader reader = new CSVReader(
-                new InputStreamReader(
-                        getResources().openRawResource(R.raw.common_words)))) {
-            dictionary = reader.readAll();
+        List<Word> dictionary = new ArrayList<>();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd,MM,YYYY");
+        try (CSVReader reader = new CSVReader( new InputStreamReader(
+                getResources().openRawResource(R.raw.common_words)))) {
+            dictionary = reader.readAll().stream()
+                    . map(s -> new Word(
+                            parseInt(s[0]),
+                            s[1],
+                            s[2],
+                            parseInt(s[3]),
+                            LocalDate.parse(s[4], dateFormat)))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("COULD NOT READ CSV DICT");
         }
         final TextView captchaTextView = (TextView) findViewById(R.id.captcha_text);
-        final String question = dictionary.get(0)[NORWEGIAN];
-        final String answer = dictionary.get(0)[ENGLISH];
+        final String question = dictionary.get(0).getNorwegian();
+        final String answer = dictionary.get(0).getEnglish();
         captchaTextView.setText(question);
 
         final EditText input_text = (EditText) findViewById(R.id.input_text);
@@ -94,7 +100,7 @@ public class NorwegianCaptchaActivity extends Activity {
     }
 
     private static String randomString(int length) {
-        char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        char[] chars = "abcdefghijklmnopqrstuvwxy".toCharArray();
         Random generator = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
