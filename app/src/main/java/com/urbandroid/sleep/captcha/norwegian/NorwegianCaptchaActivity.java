@@ -43,14 +43,18 @@ public class NorwegianCaptchaActivity extends Activity {
         setContentView(R.layout.main);
 
         captchaSupport = CaptchaSupportFactory.create(this); // include this in every captcha, in onCreate()
+        Log.d("XXX", "Still Working 1");
 
         // show timeout in TextView with id "timeout"
         captchaSupport.setRemainingTimeListener(remainingTimeListener);
+        final int difficulty = captchaSupport.getDifficulty();
 
+        Log.d("XXX", "Still Working 2");
         // show difficulty in TextView with id "difficulty", read from captchaSupport.getDifficulty()
         final TextView difficultyView = (TextView) findViewById(R.id.difficulty);
-        difficultyView.setText(getResources().getString(R.string.difficulty, captchaSupport.getDifficulty()));
+        difficultyView.setText(getResources().getString(R.string.difficulty, difficulty));
 
+        Log.d("XXX", "Still Working 3");
         // read word list
         String csvfileString = this.getApplicationInfo().dataDir + File.separatorChar + "1000.csv";
         File csvfile = new File(csvfileString);
@@ -70,20 +74,37 @@ public class NorwegianCaptchaActivity extends Activity {
             System.err.println("COULD NOT READ CSV DICT");
         }
         final TextView captchaTextView = (TextView) findViewById(R.id.captcha_text);
-        final String question = dictionary.get(0).getNorwegian();
-        final String answer = dictionary.get(0).getEnglish();
+
+        Log.d("XXX", "Still Working 4");
+        List<Word> questions = new ArrayList<>();
+        Random random = new Random();
+        List<Integer> taken = new ArrayList<>();
+        for (int i = 0, rng; i < difficulty; ) {
+            rng = random.nextInt(dictionary.size());
+            if (!taken.contains(rng)) {
+                questions.add(dictionary.get(rng));
+                i++;
+            }
+        }
+
+        Log.d("XXX", "Still Working 5");
+        final String question = questions.get(0).getNorwegian();
+        final String answer = questions.get(0).getEnglish();
         captchaTextView.setText(question);
 
         final EditText input_text = (EditText) findViewById(R.id.input_text);
 
         // send captchaSupport.solved() when correct string entered and "Done" button tapped
+        Log.d("XXX", "Still Working 6");
         findViewById(R.id.done_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i("ReverseCaptchaText", question);
                 Log.i("ReverseCaptchaInput", input_text.getText().toString());
+                Log.d("XXX", "Still Working 7");
                 if (input_text.getText().toString().equals(answer)) {
                     captchaSupport.solved(); // .solved() broadcasts an intent back to Sleep as Android to let it know that captcha is solved
+                    Log.d("XXX", "Still Working 8");
                     finish();
                 }
             }

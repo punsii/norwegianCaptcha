@@ -35,19 +35,19 @@ public class Word {
         return english;
     }
 
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
     public int getPhase() {
         return phase;
     }
 
     public void setPhase(int phase) {
         this.phase = phase;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 }
